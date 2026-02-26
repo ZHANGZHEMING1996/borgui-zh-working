@@ -1,0 +1,11 @@
+{
+  "title": "Borg Web UI",
+  "subtitle": "登录以管理您的备份",
+  "username": "用户名",
+  "password": "密码",
+  "signIn": "登录",
+  "signingIn": "登录中...",
+  "signInFailed": "登录失败",
+  "loginSuccessful": "登录成功！",
+  "loginSuccessfulChangePassword": "登录成功！请更改您的密码。"
+}

@@ -1,0 +1,436 @@
+import React, { useState } from 'react'
+import { useQuery, useMutation } from '@tanstack/react-query'
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  Button,
+  Stack,
+  Alert,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Checkbox,
+  FormControlLabel,
+  Divider,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemIcon,
+  LinearProgress,
+} from '@mui/material'
+import { Download, Upload, FileText, CheckCircle, AlertCircle } from 'lucide-react'
+import { toast } from 'react-hot-toast'
+import { configExportImportAPI } from '../services/api'
+
+interface Repository {
+  id: number
+  name: string
+  path: string
+  repository_type: string
+  has_schedule: boolean
+  has_checks: boolean
+}
+
+interface ImportResult {
+  success: boolean
+  error?: string
+  repositories_created?: number
+  repositories_updated?: number
+  schedules_created?: number
+  schedules_updated?: number
+  warnings?: string[]
+  errors?: string[]
+}
+
+const ExportImportTab: React.FC = () => {
+  // Export state
+  const [selectedRepos, setSelectedRepos] = useState<number[]>([])
+  const [includeSchedules, setIncludeSchedules] = useState(true)
+  const [exportingAll, setExportingAll] = useState(true)
+
+  // Import state
+  const [importFile, setImportFile] = useState<File | null>(null)
+  const [mergeStrategy, setMergeStrategy] = useState('skip_duplicates')
+  const [importResult, setImportResult] = useState<ImportResult | null>(null)
+
+  // Fetch repositories for export
+  const { data: reposData, isLoading: loadingRepos } = useQuery({
+    queryKey: ['exportable-repositories'],
+    queryFn: async () => {
+      const response = await configExportImportAPI.listExportableRepositories()
+      return response.data
+    },
+  })
+
+  const repositories: Repository[] = reposData?.repositories || []
+
+  // Export mutation
+  const exportMutation = useMutation({
+    mutationFn: async () => {
+      const repoIds = exportingAll ? undefined : selectedRepos
+      const response = await configExportImportAPI.exportBorgmatic(repoIds, includeSchedules)
+      return response
+    },
+    onSuccess: (response) => {
+      // Get content type and filename from headers
+      const contentType = response.headers['content-type'] || 'application/octet-stream'
+      const contentDisposition = response.headers['content-disposition'] || ''
+
+      // Extract filename from Content-Disposition header
+      let filename = 'borg-ui-export.yaml'
+      const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/)
+      if (filenameMatch && filenameMatch[1]) {
+        filename = filenameMatch[1].replace(/['"]/g, '')
+      }
+
+      // Create blob with correct content type and download file
+      const blob = new Blob([response.data], { type: contentType })
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = filename
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+
+      toast.success('Configuration exported successfully')
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    onError: (error: any) => {
+      toast.error(error.response?.data?.detail || 'Failed to export configuration')
+    },
+  })
+
+  // Import mutation
+  const importMutation = useMutation({
+    mutationFn: async ({ file, dryRun }: { file: File; dryRun: boolean }) => {
+      const response = await configExportImportAPI.importBorgmatic(file, mergeStrategy, dryRun)
+      return response.data
+    },
+    onSuccess: (result) => {
+      setImportResult(result)
+      if (!result.success) {
+        toast.error(result.error || 'Import failed')
+      } else if (result.errors?.length > 0) {
+        toast.error('Import completed with errors')
+      } else {
+        toast.success('Configuration imported successfully')
+      }
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    onError: (error: any) => {
+      toast.error(error.response?.data?.detail || 'Failed to import configuration')
+    },
+  })
+
+  const handleExport = () => {
+    if (!exportingAll && selectedRepos.length === 0) {
+      toast.error('Please select at least one repository to export')
+      return
+    }
+    exportMutation.mutate()
+  }
+
+  const handleImport = () => {
+    if (!importFile) {
+      toast.error('Please select a file to import')
+      return
+    }
+    importMutation.mutate({ file: importFile, dryRun: false })
+  }
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      if (!file.name.endsWith('.yaml') && !file.name.endsWith('.yml')) {
+        toast.error('Please select a YAML file (.yaml or .yml)')
+        return
+      }
+      setImportFile(file)
+      setImportResult(null)
+    }
+  }
+
+  const toggleRepository = (repoId: number) => {
+    if (selectedRepos.includes(repoId)) {
+      setSelectedRepos(selectedRepos.filter((id) => id !== repoId))
+    } else {
+      setSelectedRepos([...selectedRepos, repoId])
+    }
+  }
+
+  const selectAllRepos = () => {
+    setSelectedRepos(repositories.map((r) => r.id))
+  }
+
+  const clearSelection = () => {
+    setSelectedRepos([])
+  }
+
+  return (
+    <Box>
+      {/* Export Section */}
+      <Box sx={{ mb: 3 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+          <Download size={24} style={{ marginRight: 8 }} />
+          <Typography variant="h6" fontWeight={600}>
+            导出配置
+          </Typography>
+        </Box>
+
+        <Typography variant="body2" color="text.secondary">
+          Export your repositories, backup schedules, and settings to a borgmatic-compatible YAML
+          file.
+        </Typography>
+      </Box>
+
+      <Card sx={{ mb: 3 }}>
+        <CardContent>
+          <Stack spacing={3}>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={exportingAll}
+                  onChange={(e) => setExportingAll(e.target.checked)}
+                />
+              }
+              label="Export all repositories"
+            />
+
+            {!exportingAll && (
+              <Box>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    mb: 1,
+                  }}
+                >
+                  <Typography variant="subtitle2">Select Repositories</Typography>
+                  <Box>
+                    <Button size="small" onClick={selectAllRepos} disabled={loadingRepos}>
+                      Select All
+                    </Button>
+                    <Button size="small" onClick={clearSelection} disabled={loadingRepos}>
+                      Clear
+                    </Button>
+                  </Box>
+                </Box>
+                <Box
+                  sx={{
+                    maxHeight: 200,
+                    overflow: 'auto',
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    borderRadius: 1,
+                  }}
+                >
+                  {loadingRepos ? (
+                    <Typography variant="body2" sx={{ p: 2 }}>
+                      Loading repositories...
+                    </Typography>
+                  ) : repositories.length === 0 ? (
+                    <Typography variant="body2" sx={{ p: 2 }}>
+                      No repositories available
+                    </Typography>
+                  ) : (
+                    <List dense>
+                      {repositories.map((repo) => (
+                        <ListItem
+                          key={repo.id}
+                          component="div"
+                          onClick={() => toggleRepository(repo.id)}
+                          sx={{ cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}
+                        >
+                          <ListItemIcon>
+                            <Checkbox
+                              edge="start"
+                              checked={selectedRepos.includes(repo.id)}
+                              tabIndex={-1}
+                              disableRipple
+                            />
+                          </ListItemIcon>
+                          <ListItemText
+                            primary={repo.name}
+                            secondary={`${repo.path} • ${repo.repository_type}`}
+                          />
+                        </ListItem>
+                      ))}
+                    </List>
+                  )}
+                </Box>
+              </Box>
+            )}
+
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={includeSchedules}
+                  onChange={(e) => setIncludeSchedules(e.target.checked)}
+                />
+              }
+              label="Include backup schedules and retention policies"
+            />
+
+            <Button
+              variant="contained"
+              startIcon={<Download size={18} />}
+              onClick={handleExport}
+              disabled={exportMutation.isPending || (!exportingAll && selectedRepos.length === 0)}
+            >
+              {exportMutation.isPending ? 'Exporting...' : '导出配置'}
+            </Button>
+          </Stack>
+        </CardContent>
+      </Card>
+
+      <Divider sx={{ my: 4 }} />
+
+      {/* Import Section */}
+      <Box sx={{ mb: 3 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+          <Upload size={24} style={{ marginRight: 8 }} />
+          <Typography variant="h6" fontWeight={600}>
+            Import Configuration
+          </Typography>
+        </Box>
+
+        <Typography variant="body2" color="text.secondary">
+          Import borgmatic YAML configurations or Borg UI exports. Supports both standard borgmatic
+          format and Borg UI exports.
+        </Typography>
+      </Box>
+
+      <Card>
+        <CardContent>
+          <Stack spacing={3}>
+            <Box>
+              <input
+                accept=".yaml,.yml"
+                style={{ display: 'none' }}
+                id="import-file-input"
+                type="file"
+                onChange={handleFileSelect}
+              />
+              <label htmlFor="import-file-input">
+                <Button variant="outlined" component="span" startIcon={<FileText size={18} />}>
+                  Select YAML File
+                </Button>
+              </label>
+              {importFile && (
+                <Typography variant="body2" sx={{ mt: 1 }}>
+                  Selected: {importFile.name}
+                </Typography>
+              )}
+            </Box>
+
+            <FormControl fullWidth>
+              <InputLabel>Conflict Resolution Strategy</InputLabel>
+              <Select
+                value={mergeStrategy}
+                onChange={(e) => setMergeStrategy(e.target.value)}
+                label="Conflict Resolution Strategy"
+              >
+                <MenuItem value="skip_duplicates">
+                  Skip Duplicates - Keep existing configurations
+                </MenuItem>
+                <MenuItem value="replace">Replace - Overwrite existing configurations</MenuItem>
+                <MenuItem value="rename">Rename - Auto-rename imported configurations</MenuItem>
+              </Select>
+            </FormControl>
+
+            <Alert severity="warning" icon={<AlertCircle size={20} />}>
+              <strong>Important:</strong> SSH keys and repository passphrases cannot be imported for
+              security reasons. You will need to configure them manually after import.
+            </Alert>
+
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <Button
+                variant="contained"
+                startIcon={<Upload size={18} />}
+                onClick={handleImport}
+                disabled={!importFile || importMutation.isPending}
+              >
+                {importMutation.isPending ? 'Importing...' : 'Import Configuration'}
+              </Button>
+            </Box>
+
+            {importMutation.isPending && <LinearProgress />}
+
+            {/* Import Result */}
+            {importResult && (
+              <Card variant="outlined">
+                <CardContent>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                    {importResult.success ? (
+                      <CheckCircle size={24} color="green" style={{ marginRight: 8 }} />
+                    ) : (
+                      <AlertCircle size={24} color="red" style={{ marginRight: 8 }} />
+                    )}
+                    <Typography variant="h6">
+                      {importResult.success ? 'Import Summary' : 'Import Failed'}
+                    </Typography>
+                  </Box>
+
+                  {importResult.success && (
+                    <Stack spacing={1}>
+                      <Typography variant="body2">
+                        <strong>Repositories Created:</strong>{' '}
+                        {importResult.repositories_created || 0}
+                      </Typography>
+                      <Typography variant="body2">
+                        <strong>Repositories Updated:</strong>{' '}
+                        {importResult.repositories_updated || 0}
+                      </Typography>
+                      <Typography variant="body2">
+                        <strong>Schedules Created:</strong> {importResult.schedules_created || 0}
+                      </Typography>
+                      <Typography variant="body2">
+                        <strong>Schedules Updated:</strong> {importResult.schedules_updated || 0}
+                      </Typography>
+
+                      {importResult.warnings && importResult.warnings.length > 0 && (
+                        <Box sx={{ mt: 2 }}>
+                          <Typography variant="subtitle2" gutterBottom>
+                            Warnings:
+                          </Typography>
+                          {importResult.warnings.map((warning: string, index: number) => (
+                            <Alert severity="warning" key={index} sx={{ mt: 1 }}>
+                              {warning}
+                            </Alert>
+                          ))}
+                        </Box>
+                      )}
+                    </Stack>
+                  )}
+
+                  {!importResult.success && <Alert severity="error">{importResult.error}</Alert>}
+
+                  {importResult.errors && importResult.errors.length > 0 && (
+                    <Box sx={{ mt: 2 }}>
+                      <Typography variant="subtitle2" gutterBottom>
+                        Errors:
+                      </Typography>
+                      {importResult.errors.map((error: string, index: number) => (
+                        <Alert severity="error" key={index} sx={{ mt: 1 }}>
+                          {error}
+                        </Alert>
+                      ))}
+                    </Box>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+          </Stack>
+        </CardContent>
+      </Card>
+    </Box>
+  )
+}
+
+export default ExportImportTab

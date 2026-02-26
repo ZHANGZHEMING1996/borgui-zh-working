@@ -1,0 +1,157 @@
+# Borg Web UI - Docker Compose Configuration
+#
+# Zero-configuration setup with smart defaults:
+# - SECRET_KEY: Auto-generated and persisted to /data/.secret_key
+# - DATABASE_URL: Auto-configured to /data/borg.db
+# - LOG_LEVEL: Defaults to INFO
+# - PORT: Defaults to 8081
+#
+# Configure backup repositories through the web UI (not Docker volumes)
+# Repositories can be local paths, SSH/SFTP, or cloud storage
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+      args:
+        - APP_VERSION=${APP_VERSION:-local-dev}
+    container_name: borg-web-ui
+    restart: unless-stopped
+
+    # Privileged mode: Required ONLY for remote-to-remote backups via SSHFS
+    # This allows mounting remote SSH locations as local filesystems
+    # If you only use local or direct SSH backups, you can disable this
+    # See: docs/installation.md for details
+    privileged: true
+
+    ports:
+      - "${PORT:-8081}:${PORT:-8081}"
+
+    volumes:
+      # Application data (database, logs, SSH keys)
+      - borg_data:/data
+
+      # Borg repository cache (improves backup performance)
+      - borg_cache:/home/borg/.cache/borg
+
+      # System mounts
+      - /etc/localtime:/etc/localtime:ro  # Sync timezone with host
+
+      # Filesystem access for backups
+      # ⚠️ IMPORTANT: Replace with specific directories in production
+      # Default mounts entire root filesystem (development/testing only)
+      - ${LOCAL_STORAGE_PATH:-/}:/local:rw
+
+      # Production examples (replace the line above):
+      # - /home/yourusername:/local:rw
+      # - /var/www:/local/www:ro
+      # - /mnt/data:/local/data:rw
+
+      # Optional: Docker container management in backup scripts
+      # Required for stopping/starting containers during backups
+      # See: docs/docker-hooks.md
+      - /var/run/docker.sock:/var/run/docker.sock:rw
+
+    environment:
+      # Core settings (optional, all have defaults)
+      - PORT=${PORT:-8081}
+      - ENVIRONMENT=${ENVIRONMENT:-production}
+
+      # User/Group IDs for file permissions
+      # Match your host user: id -u && id -g
+      - PUID=${PUID:-1001}
+      - PGID=${PGID:-1001}
+
+      # Timezone (optional, defaults to host via /etc/localtime)
+      # Examples: America/New_York, Europe/London, Asia/Kolkata
+      - TZ=${TZ:-}
+
+      # Advanced options (uncomment to customize)
+      # - LOG_LEVEL=DEBUG
+      # - INITIAL_ADMIN_PASSWORD=your-secure-password
+      # - SECRET_KEY=your-custom-secret-key
+
+      # Borg operation timeouts in seconds (uncomment to customize for large repos)
+      # Increase these for very large repositories with long cache build times
+      # - BORG_INFO_TIMEOUT=600      # borg info operations (default: 10 min)
+      # - BORG_LIST_TIMEOUT=600      # borg list operations (default: 10 min)
+      # - BORG_INIT_TIMEOUT=300      # borg init operations (default: 5 min)
+      # - BORG_EXTRACT_TIMEOUT=3600  # borg extract operations (default: 1 hour)
+      # - SCRIPT_TIMEOUT=120         # pre/post backup scripts (default: 2 min)
+
+      # Example for very large repository:
+      # - BORG_INFO_TIMEOUT=7200     # 2 hours for initial cache build
+
+      # Local mount points (for file browser detection)
+      # Comma-separated list of container paths where host directories are mounted
+      # Default: /local (matches the volume mount above)
+      # Customize if you change volume mappings (e.g., LOCAL_MOUNT_POINTS=/local,/mylocalserver,/data)
+      - LOCAL_MOUNT_POINTS=${LOCAL_MOUNT_POINTS:-/local}
+
+      # Redis cache settings (for 600x faster archive browsing)
+      # ⚙️ Configure via Settings → Cache tab in UI (recommended)
+      # Environment variables below set initial defaults only
+      # See: https://karanhudia.github.io/borg-ui/cache
+
+      # Local Redis connection (uses redis service below)
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+
+      # External Redis URL (optional - uncomment to use remote Redis)
+      # - REDIS_URL=redis://192.168.1.100:6379/0
+
+      # Cache defaults (override in Settings → Cache UI)
+      - CACHE_TTL_SECONDS=7200        # 2 hours
+      - CACHE_MAX_SIZE_MB=2048        # 2GB
+
+    healthcheck:
+      test: ["CMD", "sh", "-c", "curl -f http://localhost:$${PORT:-8081}/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    networks:
+      - borg_network
+
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  redis:
+    image: redis:7-alpine
+    container_name: borg-redis
+    restart: unless-stopped
+
+    command: >
+      redis-server
+      --maxmemory 2gb
+      --maxmemory-policy allkeys-lru
+      --save ""
+      --appendonly no
+
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+    networks:
+      - borg_network
+
+networks:
+  borg_network:
+    driver: bridge
+
+volumes:
+  borg_data:
+    driver: local
+  borg_cache:
+    driver: local

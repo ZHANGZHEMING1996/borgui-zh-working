@@ -1,0 +1,42 @@
+{
+  "navigation": {
+    "dashboard": "面板",
+    "activity": "活动",
+    "backup": "备份",
+    "archival": "归档",
+    "restore": "恢复",
+    "schedule": "计划",
+    "remote_machines": "远程机器",
+    "repositories": "仓库",
+    "settings": {
+      "personal": "个人",
+      "system": "系统",
+      "management": "管理",
+      "advanced": "高级",
+      "account": "账户",
+      "appearance": "外观",
+      "notifications": "通知",
+      "preferences": "偏好设置",
+      "system_settings": "系统设置",
+      "cache": "缓存",
+      "logs": "日志",
+      "packages": "包",
+      "mounts": "挂载",
+      "scripts": "脚本",
+      "users": "用户",
+      "export_import": "导出/导入",
+      "beta": "测试版"
+    },
+    "sections": {
+      "backup_section": "备份",
+      "settings_section": "设置"
+    },
+    "sidebar": {
+      "version_info": "版本信息",
+      "app_version": "应用版本",
+      "borg_version": "Borg版本",
+      "welcome": "欢迎",
+      "logout": "登出"
+    }
+  }
+}

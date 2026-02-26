@@ -1,0 +1,31 @@
+{
+  "common": {
+    "dashboard": "面板",
+    "repositories": "仓库",
+    "backup": "备份",
+    "archives": "归档",
+    "restore": "恢复",
+    "schedule": "计划",
+    "activity": "活动",
+    "settings": "设置",
+    "scripts": "脚本",
+    "ssh_connections": "SSH连接",
+    "logout": "登出",
+    "save": "保存",
+    "cancel": "取消",
+    "confirm": "确认",
+    "yes": "是",
+    "no": "否",
+    "edit": "编辑",
+    "delete": "删除",
+    "add": "添加",
+    "search": "搜索",
+    "filter": "过滤",
+    "refresh": "刷新",
+    "loading": "加载中...",
+    "error": "错误",
+    "success": "成功",
+    "warning": "警告",
+    "info": "信息"
+  }
+}

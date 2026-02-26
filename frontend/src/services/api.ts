@@ -1,0 +1,456 @@
+import axios from 'axios'
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
+
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+})
+
+// Request interceptor to add auth token
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('access_token')
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
+})
+
+// Response interceptor to handle auth errors
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // Only redirect to login for 401 errors on authenticated endpoints
+    // Don't redirect if we're already trying to login (avoid swallowing login errors)
+    if (error.response?.status === 401 && error.config?.url !== '/auth/login') {
+      localStorage.removeItem('access_token')
+      window.location.href = '/login'
+    }
+    return Promise.reject(error)
+  }
+)
+
+export interface RepositoryData {
+  name?: string
+  path?: string
+  encryption?: string
+  compression?: string
+  source_directories?: string[]
+  exclude_patterns?: string[]
+  repository_type?: string
+  host?: string
+  port?: number
+  username?: string
+  ssh_key_id?: number | null
+  connection_id?: number | null
+  remote_path?: string
+  pre_backup_script?: string
+  post_backup_script?: string
+  hook_timeout?: number
+  pre_hook_timeout?: number
+  post_hook_timeout?: number
+  continue_on_hook_failure?: boolean
+  passphrase?: string
+  mode?: 'full' | 'observe'
+  custom_flags?: string | null
+  bypass_lock?: boolean
+  // Allow other properties for flexibility
+  [key: string]: unknown
+}
+
+export interface SystemSettings {
+  mount_timeout?: number
+  info_timeout?: number
+  list_timeout?: number
+  init_timeout?: number
+  backup_timeout?: number
+  stats_refresh_interval_minutes?: number
+  bypass_lock_on_info?: boolean
+  [key: string]: unknown
+}
+
+// Generic type for object data
+type ApiData = Record<string, unknown>
+
+export const authAPI = {
+  login: (username: string, password: string) =>
+    api.post(
+      '/auth/login',
+      `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`,
+      {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      }
+    ),
+
+  logout: () => api.post('/auth/logout'),
+
+  refresh: () => api.post('/auth/refresh'),
+
+  getProfile: () => api.get('/auth/me'),
+
+  changePassword: (currentPassword: string, newPassword: string) =>
+    api.post('/auth/change-password', {
+      current_password: currentPassword,
+      new_password: newPassword,
+    }),
+}
+
+export const dashboardAPI = {
+  getStatus: () => api.get('/dashboard/status'),
+  getMetrics: () => api.get('/dashboard/metrics'),
+  getSchedule: () => api.get('/dashboard/schedule'),
+  getOverview: () => api.get('/dashboard/overview'),
+}
+
+// Configuration API - DEPRECATED (removed from UI)
+// We now use borg directly with per-repository passphrases
+// Keeping this commented out for reference
+/*
+export const configAPI = {
+  // List all configurations
+  listConfigurations: () => api.get('/config/'),
+  // Get default configuration
+  getDefaultConfig: () => api.get('/config/default'),
+  // Get specific configuration
+  getConfiguration: (id: number) => api.get(`/config/${id}`),
+  // Create new configuration
+  createConfiguration: (data: { name: string; description?: string; content: string }) =>
+    api.post('/config/', data),
+  // Update configuration
+  updateConfiguration: (id: number, data: { name?: string; description?: string; content?: string }) =>
+    api.put(`/config/${id}`, data),
+  // Delete configuration
+  deleteConfiguration: (id: number) => api.delete(`/config/${id}`),
+  // Set as default
+  setDefaultConfiguration: (id: number) => api.post(`/config/${id}/set-default`),
+  // Validate configuration content
+  validateConfig: (config: string) => api.post('/config/validate', { content: config }),
+  // Generate template using borg CLI (recommended)
+  generateTemplate: () => api.post('/config/generate-template'),
+  // Get templates (deprecated - use generateTemplate instead)
+  getTemplates: () => api.get('/config/templates'),
+
+  // Legacy endpoints (keep for backward compatibility)
+  getConfig: () => api.get('/config/current'),
+  updateConfig: (config: string) => api.put('/config/update', { content: config }),
+}
+*/
+
+export const backupAPI = {
+  startBackup: (repository?: string) => api.post('/backup/start', { repository }),
+  getStatus: (jobId: string) => api.get(`/backup/status/${jobId}`),
+  getAllJobs: () => api.get('/backup/jobs'),
+  getManualJobs: () => api.get('/backup/jobs?manual_only=true'),
+  getScheduledJobs: () => api.get('/backup/jobs?scheduled_only=true'),
+  cancelJob: (jobId: string) => api.post(`/backup/cancel/${jobId}`),
+  // Download logs as file (only for failed/cancelled backups)
+  downloadLogs: (jobId: string) => {
+    const token = localStorage.getItem('access_token')
+    window.open(`${API_BASE_URL}/backup/logs/${jobId}/download?token=${token}`, '_blank')
+  },
+}
+
+export const archivesAPI = {
+  listArchives: (repository: string) => api.get(`/archives/${repository}`),
+  getArchiveInfo: (repository: string, archive: string) =>
+    api.get(`/archives/${repository}/${archive}`),
+  listContents: (repository: string, archive: string, path?: string) =>
+    api.get(`/archives/${repository}/${archive}/contents`, { params: { path } }),
+  deleteArchive: (repository: string, archive: string) =>
+    api.delete(
+      `/archives/${encodeURIComponent(archive)}?repository=${encodeURIComponent(repository)}`
+    ),
+  downloadFile: (repository: string, archive: string, filePath: string) => {
+    const token = localStorage.getItem('access_token')
+    const encodedFilePath = encodeURIComponent(filePath)
+    const encodedRepository = encodeURIComponent(repository)
+    const encodedArchive = encodeURIComponent(archive)
+    window.open(
+      `${API_BASE_URL}/archives/download?repository=${encodedRepository}&archive=${encodedArchive}&file_path=${encodedFilePath}&token=${token}`,
+      '_blank'
+    )
+  },
+}
+
+export const browseAPI = {
+  getContents: (repositoryId: number, archiveName: string, path: string = '') =>
+    api.get(`/browse/${repositoryId}/${archiveName}`, { params: { path } }),
+}
+
+export const restoreAPI = {
+  getRepositories: () => api.get('/restore/repositories'),
+  getArchives: (repositoryId: number) => api.get(`/restore/archives/${repositoryId}`),
+  getArchiveContents: (repositoryId: number, archiveName: string, path: string = '') =>
+    api.get(`/restore/contents/${repositoryId}/${encodeURIComponent(archiveName)}`, {
+      params: { path },
+    }),
+  previewRestore: (repository: string, archive: string, paths: string[]) =>
+    api.post('/restore/preview', { repository, archive, paths }),
+  startRestore: (repository: string, archive: string, paths: string[], destination: string) =>
+    api.post('/restore/start', { repository, archive, paths, destination }),
+  getRestoreJobs: () => api.get('/restore/jobs'),
+  getRestoreStatus: (jobId: number) => api.get(`/restore/status/${jobId}`),
+}
+export const settingsAPI = {
+  // System settings
+  getSystemSettings: () => api.get('/settings/system'),
+  updateSystemSettings: (settings: SystemSettings) => api.put('/settings/system', settings),
+  refreshAllStats: () => api.post('/settings/refresh-stats'),
+
+  // User management
+  getUsers: () => api.get('/settings/users'),
+  createUser: (userData: ApiData) => api.post('/settings/users', userData),
+  updateUser: (userId: number, userData: ApiData) => api.put(`/settings/users/${userId}`, userData),
+  deleteUser: (userId: number) => api.delete(`/settings/users/${userId}`),
+  resetUserPassword: (userId: number, newPassword: string) =>
+    api.post(`/settings/users/${userId}/reset-password`, { new_password: newPassword }),
+
+  // Profile management
+  getProfile: () => api.get('/settings/profile'),
+  updateProfile: (profileData: ApiData) => api.put('/settings/profile', profileData),
+  changePassword: (passwordData: ApiData) => api.post('/settings/change-password', passwordData),
+
+  // User preferences
+  getPreferences: () => api.get('/settings/preferences'),
+  updatePreferences: (preferences: ApiData) => api.put('/settings/preferences', preferences),
+
+  // System maintenance
+  cleanupSystem: () => api.post('/settings/system/cleanup'),
+
+  // Log management
+  getLogStorageStats: () => api.get('/settings/system/logs/storage'),
+  manualLogCleanup: () => api.post('/settings/system/logs/cleanup'),
+
+  // Cache management
+  getCacheStats: () => api.get('/settings/cache/stats'),
+  clearCache: (repositoryId?: number) =>
+    api.post('/settings/cache/clear', null, { params: { repository_id: repositoryId } }),
+  updateCacheSettings: (
+    ttlMinutes: number,
+    maxSizeMb: number,
+    redisUrl?: string,
+    browseMaxItems?: number,
+    browseMaxMemoryMb?: number
+  ) => {
+    const params: Record<string, string | number> = {
+      cache_ttl_minutes: ttlMinutes,
+      cache_max_size_mb: maxSizeMb,
+    }
+    // Only include redis_url if it's provided
+    if (redisUrl !== undefined) {
+      params.redis_url = redisUrl
+    }
+    // Only include browse limits if provided
+    if (browseMaxItems !== undefined) {
+      params.browse_max_items = browseMaxItems
+    }
+    if (browseMaxMemoryMb !== undefined) {
+      params.browse_max_memory_mb = browseMaxMemoryMb
+    }
+    return api.put('/settings/cache/settings', null, { params })
+  },
+}
+
+// Events API (Server-Sent Events)
+export const eventsAPI = {
+  streamEvents: () => {
+    const token = localStorage.getItem('access_token')
+    const url = `/api/events/stream${token ? `?token=${token}` : ''}`
+    return new EventSource(url)
+  },
+}
+
+// Repositories API
+export const repositoriesAPI = {
+  getRepositories: () => api.get('/repositories/'),
+  createRepository: (data: RepositoryData) => api.post('/repositories/', data),
+  importRepository: (data: RepositoryData) => api.post('/repositories/import', data),
+  getRepository: (id: number) => api.get(`/repositories/${id}`),
+  updateRepository: (id: number, data: RepositoryData) => api.put(`/repositories/${id}`, data),
+  deleteRepository: (id: number) => api.delete(`/repositories/${id}`),
+  checkRepository: (id: number, maxDuration: number = 3600) =>
+    api.post(`/repositories/${id}/check`, { max_duration: maxDuration }),
+  compactRepository: (id: number) => api.post(`/repositories/${id}/compact`),
+  pruneRepository: (id: number, data: ApiData) => api.post(`/repositories/${id}/prune`, data),
+  breakLock: (id: number) => api.post(`/repositories/${id}/break-lock`),
+  getRepositoryStats: (id: number) => api.get(`/repositories/${id}/stats`),
+  listRepositoryArchives: (id: number) => api.get(`/repositories/${id}/archives`),
+  getRepositoryInfo: (id: number) => api.get(`/repositories/${id}/info`),
+  // Check/Compact job management
+  getCheckJobStatus: (jobId: number) => api.get(`/repositories/check-jobs/${jobId}`),
+  getRepositoryCheckJobs: (id: number, limit?: number) =>
+    api.get(`/repositories/${id}/check-jobs`, { params: { limit } }),
+  getCompactJobStatus: (jobId: number) => api.get(`/repositories/compact-jobs/${jobId}`),
+  getRepositoryCompactJobs: (id: number, limit?: number) =>
+    api.get(`/repositories/${id}/compact-jobs`, { params: { limit } }),
+  getRunningJobs: (id: number) => api.get(`/repositories/${id}/running-jobs`),
+  getArchiveInfo: (
+    repoId: number,
+    archiveName: string,
+    includeFiles: boolean = true,
+    fileLimit: number = 1000
+  ) =>
+    api.get(`/repositories/${repoId}/archives/${archiveName}/info`, {
+      params: { include_files: includeFiles, file_limit: fileLimit },
+    }),
+  getArchiveFiles: (repoId: number, archiveName: string, limit?: number) =>
+    api.get(`/repositories/${repoId}/archives/${archiveName}/files`, {
+      params: limit ? { limit } : undefined,
+    }),
+  // Check schedule management
+  getCheckSchedule: (id: number) => api.get(`/repositories/${id}/check-schedule`),
+  updateCheckSchedule: (id: number, data: ApiData) =>
+    api.put(`/repositories/${id}/check-schedule`, data),
+  list: () => api.get('/repositories/'),
+  startCheck: (id: number, data: ApiData) => api.post(`/repositories/${id}/check`, data),
+  // Keyfile management
+  uploadKeyfile: (id: number, formData: FormData) =>
+    api.post(`/repositories/${id}/keyfile`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }),
+}
+
+// SSH Keys API
+export const sshKeysAPI = {
+  // Single-key system
+  getSystemKey: () => api.get('/ssh-keys/system-key'),
+  generateSSHKey: (data: ApiData) => api.post('/ssh-keys/generate', data),
+
+  // Legacy multi-key endpoints (deprecated)
+  getSSHKeys: () => api.get('/ssh-keys'),
+  createSSHKey: (data: ApiData) => api.post('/ssh-keys', data),
+  quickSetup: (data: ApiData) => api.post('/ssh-keys/quick-setup', data),
+  getSSHKey: (id: number) => api.get(`/ssh-keys/${id}`),
+  updateSSHKey: (id: number, data: ApiData) => api.put(`/ssh-keys/${id}`, data),
+  deleteSSHKey: (id: number) => api.delete(`/ssh-keys/${id}`),
+
+  // Connection management
+  deploySSHKey: (id: number, data: ApiData) => api.post(`/ssh-keys/${id}/deploy`, data),
+  testSSHConnection: (id: number, data: ApiData) =>
+    api.post(`/ssh-keys/${id}/test-connection`, data),
+  testExistingConnection: (connectionId: number) =>
+    api.post(`/ssh-keys/connections/${connectionId}/test`),
+  getSSHConnections: () => api.get('/ssh-keys/connections'),
+  updateSSHConnection: (connectionId: number, data: ApiData) =>
+    api.put(`/ssh-keys/connections/${connectionId}`, data),
+  deleteSSHConnection: (connectionId: number) =>
+    api.delete(`/ssh-keys/connections/${connectionId}`),
+  refreshConnectionStorage: (connectionId: number) =>
+    api.post(`/ssh-keys/connections/${connectionId}/refresh-storage`),
+  redeployKeyToConnection: (connectionId: number, password: string) =>
+    api.post(`/ssh-keys/connections/${connectionId}/redeploy`, { password }),
+  importSSHKey: (data: ApiData) => api.post('/ssh-keys/import', data),
+}
+
+// Schedule API
+export const scheduleAPI = {
+  getScheduledJobs: () => api.get('/schedule/'),
+  createScheduledJob: (data: ApiData) => api.post('/schedule/', data),
+  getScheduledJob: (id: number) => api.get(`/schedule/${id}`),
+  updateScheduledJob: (id: number, data: ApiData) => api.put(`/schedule/${id}`, data),
+  deleteScheduledJob: (id: number) => api.delete(`/schedule/${id}`),
+  toggleScheduledJob: (id: number) => api.post(`/schedule/${id}/toggle`),
+  runScheduledJobNow: (id: number) => api.post(`/schedule/${id}/run-now`),
+  duplicateScheduledJob: (id: number) => api.post(`/schedule/${id}/duplicate`),
+  validateCronExpression: (data: ApiData) => api.post('/schedule/validate-cron', data),
+  getCronPresets: () => api.get('/schedule/cron-presets'),
+  getUpcomingJobs: (hours?: number) => api.get('/schedule/upcoming-jobs', { params: { hours } }),
+}
+
+export const notificationsAPI = {
+  list: () => api.get('/notifications'),
+  get: (id: number) => api.get(`/notifications/${id}`),
+  create: (data: ApiData) => api.post('/notifications', data),
+  update: (id: number, data: ApiData) => api.put(`/notifications/${id}`, data),
+  delete: (id: number) => api.delete(`/notifications/${id}`),
+  test: (serviceUrl: string) => api.post('/notifications/test', { service_url: serviceUrl }),
+}
+
+export const activityAPI = {
+  list: (params?: ApiData) => api.get('/activity/recent', { params }),
+  getLogs: (jobType: string, jobId: number, offset: number = 0) =>
+    api.get(`/activity/${jobType}/${jobId}/logs`, { params: { offset } }),
+  downloadLogs: (jobType: string, jobId: number) => {
+    const token = localStorage.getItem('access_token')
+    window.open(
+      `${API_BASE_URL}/activity/${jobType}/${jobId}/logs/download?token=${token}`,
+      '_blank'
+    )
+  },
+}
+
+export const configExportImportAPI = {
+  // Export configuration to borgmatic YAML
+  exportBorgmatic: (repositoryIds?: number[], includeSchedules = true) =>
+    api.post(
+      '/config/export/borgmatic',
+      {
+        repository_ids: repositoryIds,
+        include_schedules: includeSchedules,
+      },
+      {
+        responseType: 'blob', // Important for file download
+      }
+    ),
+
+  // Import borgmatic YAML configuration
+  importBorgmatic: (file: File, mergeStrategy = 'skip_duplicates', dryRun = false) => {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    return api.post(
+      `/config/import/borgmatic?merge_strategy=${mergeStrategy}&dry_run=${dryRun}`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    )
+  },
+
+  // Get list of repositories available for export
+  listExportableRepositories: () => api.get('/config/export/repositories'),
+}
+
+export const scriptsAPI = {
+  // List all scripts from library
+  list: (params?: { category?: string; search?: string }) => api.get('/scripts', { params }),
+
+  // Get a specific script
+  get: (scriptId: number) => api.get(`/scripts/${scriptId}`),
+
+  // Create a new script
+  create: (data: ApiData) => api.post('/scripts', data),
+
+  // Update a script
+  update: (scriptId: number, data: ApiData) => api.put(`/scripts/${scriptId}`, data),
+
+  // Delete a script
+  delete: (scriptId: number) => api.delete(`/scripts/${scriptId}`),
+}
+
+export const mountsAPI = {
+  // Mount a Borg repository or archive
+  mountBorgArchive: (data: {
+    repository_id: number
+    archive_name?: string
+    mount_point?: string
+  }) => api.post('/mounts/borg', data),
+
+  // Unmount a mounted archive
+  unmountBorgArchive: (mountId: string, force: boolean = false) =>
+    api.post(`/mounts/borg/unmount/${mountId}`, {}, { params: { force } }),
+
+  // List all active mounts
+  listMounts: () => api.get('/mounts'),
+
+  // Get specific mount info
+  getMountInfo: (mountId: string) => api.get(`/mounts/${mountId}`),
+}
+
+export default api
