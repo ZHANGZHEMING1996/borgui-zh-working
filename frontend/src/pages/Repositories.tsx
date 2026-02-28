@@ -323,11 +323,10 @@ export default function Repositories() {
         >
           <Box sx={{ flex: 1, mr: 2 }}>
             <Typography variant="h4" fontWeight={600} gutterBottom>
-              Repository Management
+              存储库管理
             </Typography>
             <Typography variant="body2" color="text.secondary" paragraph>
-              A repository is where your backed-up data will be stored. The files from your
-              configured sources will be backed up here.
+              存储库是存储备份数据的地方。配置的源文件将备份到这里。
             </Typography>
           </Box>
           {user?.is_admin && (
@@ -338,7 +337,7 @@ export default function Repositories() {
                 onClick={() => openWizard('create')}
                 sx={{ flexShrink: 0 }}
               >
-                Create Repository
+                创建存储库
               </Button>
               <Button
                 variant="outlined"
@@ -346,7 +345,7 @@ export default function Repositories() {
                 onClick={() => openWizard('import')}
                 sx={{ flexShrink: 0 }}
               >
-                Import Existing
+                导入现有存储库
               </Button>
             </Stack>
           )}
@@ -357,7 +356,7 @@ export default function Repositories() {
       {isLoading ? (
         <Box sx={{ textAlign: 'center', py: 8 }}>
           <Typography variant="body2" color="text.secondary">
-            Loading repositories...
+            正在加载存储库...
           </Typography>
         </Box>
       ) : repositories.length === 0 ? (
@@ -365,14 +364,13 @@ export default function Repositories() {
           <CardContent sx={{ textAlign: 'center', py: 8 }}>
             <Storage sx={{ fontSize: 64, color: 'text.disabled', mb: 2 }} />
             <Typography variant="h6" gutterBottom>
-              No Repositories Yet
+              暂无存储库
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-              Create your first Borg repository to start backing up your data.
+              创建您的第一个 Borg 存储库以开始备份数据。
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              Create a local repository or remote repository via SSH. The type will be automatically
-              detected based on the path you provide.
+              创建本地存储库或通过 SSH 创建远程存储库。类型将根据您提供的路径自动检测。
             </Typography>
             {user?.is_admin && (
               <Stack direction="row" spacing={2} justifyContent="center">
@@ -381,14 +379,14 @@ export default function Repositories() {
                   startIcon={<Add />}
                   onClick={() => openWizard('create')}
                 >
-                  Create Repository
+                  创建存储库
                 </Button>
                 <Button
                   variant="outlined"
                   startIcon={<FileUpload />}
                   onClick={() => openWizard('import')}
                 >
-                  Import Existing
+                  导入现有存储库
                 </Button>
               </Stack>
             )}

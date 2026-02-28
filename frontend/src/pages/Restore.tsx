@@ -357,10 +357,10 @@ const Restore: React.FC = () => {
       {/* Header */}
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" fontWeight={600} gutterBottom>
-          Restore Archives
+          恢复归档
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Select an archive to restore from backup
+          选择一个归档以从备份中恢复
         </Typography>
       </Box>
 
@@ -370,7 +370,7 @@ const Restore: React.FC = () => {
           <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 2 }}>
             <Database size={20} color="#2e7d32" />
             <Typography variant="h6" fontWeight={600}>
-              Select Repository
+              选择存储库
             </Typography>
           </Stack>
           <FormControl fullWidth sx={{ minWidth: { xs: '100%', sm: 300 } }}>
@@ -436,8 +436,7 @@ const Restore: React.FC = () => {
       {selectedRepository && (
         <>
           <Alert severity="info" sx={{ mb: 3 }}>
-            Select an archive below to restore its contents. The entire archive will be restored to
-            the destination path you specify.
+            选择下面的归档以恢复其内容。整个归档将恢复到您指定的目标路径。
           </Alert>
 
           <Box sx={{ mb: 3 }}>
@@ -449,7 +448,7 @@ const Restore: React.FC = () => {
               loading={loadingArchives}
               emptyState={{
                 icon: <ArchiveIcon size={48} />,
-                title: 'No archives found in this repository',
+                title: '此存储库中未找到归档',
               }}
               headerBgColor="background.default"
               enableHover={true}
@@ -463,10 +462,10 @@ const Restore: React.FC = () => {
         <Card sx={{ mb: 3 }}>
           <CardContent>
             <Typography variant="h6" fontWeight={600} gutterBottom>
-              Active Restores
+              活跃的恢复
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              Pending and running restore operations
+              待处理和正在运行的恢复操作
             </Typography>
 
             <Stack spacing={3}>
@@ -608,7 +607,7 @@ const Restore: React.FC = () => {
           >
             <Clock size={20} />
             <Typography variant="h6" fontWeight={600}>
-              Recent Restores
+              最近的恢复
             </Typography>
           </Stack>
 
@@ -634,7 +633,7 @@ const Restore: React.FC = () => {
             enableHover={true}
             emptyState={{
               icon: <Clock size={48} />,
-              title: 'No restore jobs found',
+              title: '未找到恢复任务',
             }}
           />
         </CardContent>
@@ -652,7 +651,7 @@ const Restore: React.FC = () => {
             <RotateCcw size={24} />
             <Box>
               <Typography variant="h6" fontWeight={600}>
-                Restore Archive
+                恢复归档
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 {restoreArchive?.name}
@@ -665,7 +664,7 @@ const Restore: React.FC = () => {
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 4 }}>
               <CircularProgress size={48} />
               <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-                Loading archive details...
+                正在加载归档详情...
               </Typography>
             </Box>
           ) : (
@@ -673,14 +672,13 @@ const Restore: React.FC = () => {
               {archiveStats && (
                 <Alert severity="info">
                   <Typography variant="body2" fontWeight={500} gutterBottom>
-                    Archive Information
+                    归档信息
                   </Typography>
                   <Typography variant="body2">
-                    Files: {archiveStats.nfiles?.toLocaleString() || 'N/A'}
+                    文件数: {archiveStats.nfiles?.toLocaleString() || 'N/A'}
                   </Typography>
                   <Typography variant="body2">
-                    Size:{' '}
-                    {archiveStats.original_size
+                    大小: {archiveStats.original_size
                       ? formatBytesUtil(archiveStats.original_size)
                       : 'N/A'}
                   </Typography>
@@ -690,7 +688,7 @@ const Restore: React.FC = () => {
               {selectedPaths.length > 0 ? (
                 <Alert severity="success">
                   <Typography variant="body2" fontWeight={500} gutterBottom>
-                    Selected Items ({selectedPaths.length})
+                    已选择的项目 ({selectedPaths.length})
                   </Typography>
                   <Box
                     sx={{
@@ -731,11 +729,10 @@ const Restore: React.FC = () => {
               ) : (
                 <Alert severity="warning">
                   <Typography variant="body2" fontWeight={500} gutterBottom>
-                    Important
+                    重要提示
                   </Typography>
                   <Typography variant="body2">
-                    This will restore the entire archive to the destination path. Existing files may
-                    be overwritten.
+                    这将把整个归档恢复到目标路径。现有文件可能会被覆盖。
                   </Typography>
                   <Button
                     size="small"
@@ -749,11 +746,8 @@ const Restore: React.FC = () => {
               )}
 
               <PathSelectorField
-                label="Destination Path"
-                value={destination}
-                onChange={setDestination}
-                placeholder="/path/to/restore/location"
-                helperText="Select the directory where you want to restore the archive"
+                label="目标路径"
+                helperText="选择您希望恢复归档的目录"
                 disabled={restoreMutation.isPending}
                 required
                 selectMode="directories"

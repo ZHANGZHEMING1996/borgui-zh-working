@@ -203,10 +203,10 @@ export default function DashboardNew() {
       {/* Header */}
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" fontWeight={600} gutterBottom>
-          Dashboard
+          仪表盘
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Comprehensive overview of your backup infrastructure
+          备份基础设施的综合概览
         </Typography>
       </Box>
 
@@ -237,13 +237,13 @@ export default function DashboardNew() {
               </Box>
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Typography variant="body2" color="text.secondary" noWrap>
-                  Repositories
+                  存储库
                 </Typography>
                 <Typography variant="h5" fontWeight={600} sx={{ mt: 0.5 }}>
                   {overview.summary.total_repositories}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  {overview.summary.ssh_repositories} SSH remote
+                  {overview.summary.ssh_repositories} 个 SSH 远程存储库
                 </Typography>
               </Box>
             </Stack>
@@ -268,13 +268,13 @@ export default function DashboardNew() {
               </Box>
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Typography variant="body2" color="text.secondary" noWrap>
-                  Active Schedules
+                  活跃计划
                 </Typography>
                 <Typography variant="h5" fontWeight={600} sx={{ mt: 0.5 }}>
                   {overview.summary.active_schedules}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  of {overview.summary.total_schedules} total
+                  总计 {overview.summary.total_schedules} 个计划
                 </Typography>
               </Box>
             </Stack>
@@ -299,13 +299,13 @@ export default function DashboardNew() {
               </Box>
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Typography variant="body2" color="text.secondary" noWrap>
-                  Success Rate (30d)
+                  成功率（30天）
                 </Typography>
                 <Typography variant="h5" fontWeight={600} sx={{ mt: 0.5 }}>
                   {overview.summary.success_rate_30d.toFixed(1)}%
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  {overview.summary.successful_jobs_30d}/{overview.summary.total_jobs_30d} backups
+                  {overview.summary.successful_jobs_30d}/{overview.summary.total_jobs_30d} 次备份
                 </Typography>
               </Box>
             </Stack>
@@ -331,13 +331,13 @@ export default function DashboardNew() {
               </Box>
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Typography variant="body2" color="text.secondary" noWrap>
-                  Failed (Last 30d)
+                  失败（最近30天）
                 </Typography>
                 <Typography variant="h5" fontWeight={600} sx={{ mt: 0.5 }}>
                   {overview.summary.failed_jobs_30d}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  Requires attention
+                  需要关注
                 </Typography>
               </Box>
             </Stack>

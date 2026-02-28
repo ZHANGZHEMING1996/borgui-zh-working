@@ -337,10 +337,10 @@ const Archives: React.FC = () => {
       {/* Header */}
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" fontWeight={600} gutterBottom>
-          Archive Browser
+          归档浏览器
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Browse and manage your backup archives
+          浏览和管理您的备份归档
         </Typography>
       </Box>
 
@@ -350,23 +350,23 @@ const Archives: React.FC = () => {
           <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 2 }}>
             <Database size={20} color="#2e7d32" />
             <Typography variant="h6" fontWeight={600}>
-              Select Repository
+              选择存储库
             </Typography>
           </Stack>
           <FormControl fullWidth sx={{ minWidth: { xs: '100%', sm: 300 } }}>
             <InputLabel id="repository-select-label" sx={{ color: 'text.primary' }}>
-              Repository
+              存储库
             </InputLabel>
             <Select
               labelId="repository-select-label"
               value={selectedRepositoryId || ''}
               onChange={(e) => handleRepositoryChange(e.target.value as number)}
-              label="Repository"
+              label="存储库"
               disabled={loadingRepositories}
               sx={{ height: { xs: 48, sm: 56 } }}
             >
               <MenuItem value="" disabled>
-                {loadingRepositories ? 'Loading repositories...' : 'Select a repository...'}
+                {loadingRepositories ? '正在加载存储库...' : '选择一个存储库...'}
               </MenuItem>
               {repositories.map((repo: Repository) => (
                 <MenuItem key={repo.id} value={repo.id} disabled={repo.has_running_maintenance}>
@@ -382,7 +382,7 @@ const Archives: React.FC = () => {
                             color="warning.main"
                             sx={{ ml: 1 }}
                           >
-                            (Maintenance Running)
+                            （维护中）
                           </Typography>
                         )}
                       </Typography>
@@ -416,7 +416,7 @@ const Archives: React.FC = () => {
         >
           <CircularProgress size={48} />
           <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-            Loading repository statistics...
+            正在加载存储库统计信息...
           </Typography>
         </Box>
       )}
@@ -436,7 +436,7 @@ const Archives: React.FC = () => {
                 <ArchiveIcon size={32} color="#1565c0" />
                 <Box>
                   <Typography variant="body2" color="primary.dark" fontWeight={500}>
-                    Total Archives
+                    总归档数
                   </Typography>
                   <Typography variant="h4" fontWeight={700} color="primary.dark">
                     {archivesList.length}
@@ -453,7 +453,7 @@ const Archives: React.FC = () => {
                 <Database size={32} color="#2e7d32" />
                 <Box>
                   <Typography variant="body2" color="success.dark" fontWeight={500}>
-                    Space Used
+                    已用空间
                   </Typography>
                   <Typography
                     variant="h4"
@@ -475,7 +475,7 @@ const Archives: React.FC = () => {
                 <Database size={32} color="#0277bd" />
                 <Box>
                   <Typography variant="body2" sx={{ color: '#0277bd' }} fontWeight={500}>
-                    Space Saved
+                    节省空间
                   </Typography>
                   <Typography
                     variant="h4"
@@ -501,7 +501,7 @@ const Archives: React.FC = () => {
                 <Gauge size={32} color="#7b1fa2" />
                 <Box>
                   <Typography variant="body2" color="purple" fontWeight={500}>
-                    Compression
+                    压缩率
                   </Typography>
                   <Typography variant="h4" fontWeight={700} color="purple">
                     {repoInfo.data.info.cache.stats.unique_size > 0
@@ -520,7 +520,7 @@ const Archives: React.FC = () => {
                 <Layers size={32} color="#e65100" />
                 <Box>
                   <Typography variant="body2" sx={{ color: '#e65100' }} fontWeight={500}>
-                    Deduplication
+                    去重率
                   </Typography>
                   <Typography variant="h4" fontWeight={700} sx={{ color: '#e65100' }}>
                     {repoInfo.data.info.cache.stats.total_size > 0

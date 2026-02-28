@@ -189,10 +189,10 @@ const Backup: React.FC = () => {
       >
         <Box>
           <Typography variant="h4" fontWeight={600} gutterBottom>
-            Backup Operations
+            备份操作
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Manage and monitor your backup jobs
+            管理和监控您的备份任务
           </Typography>
         </Box>
         <Stack direction="row" spacing={2} alignItems="center"></Stack>
@@ -204,11 +204,11 @@ const Backup: React.FC = () => {
           <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 2 }}>
             <Play size={20} color="#2e7d32" />
             <Typography variant="h6" fontWeight={600}>
-              Manual Backup
+              手动备份
             </Typography>
           </Stack>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            Select a repository and start a backup job
+            选择一个存储库并启动备份任务
           </Typography>
 
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="stretch">
@@ -305,10 +305,10 @@ const Backup: React.FC = () => {
           {repositoriesData?.data?.repositories?.length === 0 && !loadingRepositories && (
             <Alert severity="warning" sx={{ mt: 2 }}>
               <Typography variant="body2" fontWeight={500} gutterBottom>
-                No Repositories Found
+                未找到存储库
               </Typography>
               <Typography variant="body2">
-                Create a repository in the Repositories page before starting a backup
+                请在“存储库”页面中创建一个存储库后再启动备份
               </Typography>
             </Alert>
           )}
@@ -322,7 +322,7 @@ const Backup: React.FC = () => {
             <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
               <Info size={20} color="#1976d2" />
               <Typography variant="h6" fontWeight={600}>
-                Command Preview
+                命令预览
               </Typography>
             </Stack>
             <Box
@@ -349,10 +349,10 @@ const Backup: React.FC = () => {
         <Card sx={{ mb: 3 }}>
           <CardContent>
             <Typography variant="h6" fontWeight={600} gutterBottom>
-              Running Jobs
+              正在运行的任务
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              Currently active backup operations
+              当前活动的备份操作
             </Typography>
 
             <Stack spacing={3}>
@@ -554,11 +554,11 @@ const Backup: React.FC = () => {
           >
             <Clock size={20} />
             <Typography variant="h6" fontWeight={600}>
-              Recent Jobs
+              最近的任务
             </Typography>
           </Stack>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            History of backup operations
+            备份操作历史记录
           </Typography>
 
           <BackupJobsTable
@@ -584,7 +584,7 @@ const Backup: React.FC = () => {
                   <Clock size={48} />
                 </Box>
               ),
-              title: 'No backup jobs found',
+              title: '未找到备份任务',
             }}
           />
         </CardContent>

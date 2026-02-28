@@ -1612,10 +1612,7 @@ const Schedule: React.FC = () => {
                       <Switch
                         checked={createForm.run_compact_after}
                         onChange={(e) =>
-                          setCreateForm((prev) => ({
-                            ...prev,
-                            run_compact_after: e.target.checked,
-                          }))
+                          setCreateForm((prev) => ({ ...prev, run_compact_after: e.target.checked }))
                         }
                       />
                     }

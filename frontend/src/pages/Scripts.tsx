@@ -239,10 +239,10 @@ export default function Scripts() {
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Box>
           <Typography variant="h4" sx={{ fontWeight: 600 }}>
-            Script Library
+            脚本库
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            Reusable scripts for backup hooks and maintenance
+            可重用的备份钩子和维护脚本
           </Typography>
         </Box>
         <Button
@@ -251,7 +251,7 @@ export default function Scripts() {
           onClick={handleCreate}
           sx={{ minWidth: 140 }}
         >
-          New Script
+          新建脚本
         </Button>
       </Box>
 
@@ -259,8 +259,7 @@ export default function Scripts() {
       {scripts.length === 0 && (
         <Alert severity="info" sx={{ mb: 3 }}>
           <Typography variant="body2">
-            No scripts created yet. Scripts can be assigned to repositories for pre-backup and
-            post-backup hooks with conditions like "run on failure" or "run always".
+            尚未创建任何脚本。脚本可以分配给存储库，用于备份前和备份后的钩子，条件包括“失败时运行”或“始终运行”。
           </Typography>
         </Alert>
       )}
@@ -270,14 +269,14 @@ export default function Scripts() {
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell sx={{ fontWeight: 600 }}>Name</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Description</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Category</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Run On</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Timeout</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Usage</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>名称</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>描述</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>类别</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>运行条件</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>超时时间</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>使用次数</TableCell>
               <TableCell sx={{ fontWeight: 600 }} align="right">
-                Actions
+                操作
               </TableCell>
             </TableRow>
           </TableHead>
@@ -325,12 +324,12 @@ export default function Scripts() {
                   </Typography>
                 </TableCell>
                 <TableCell align="right">
-                  <Tooltip title="Test Script">
+                  <Tooltip title="测试脚本">
                     <IconButton size="small" onClick={() => handleTest(script)} sx={{ mr: 0.5 }}>
                       <Play size={18} />
                     </IconButton>
                   </Tooltip>
-                  <Tooltip title="Edit Script">
+                  <Tooltip title="编辑脚本">
                     <IconButton
                       size="small"
                       onClick={() => handleEdit(script)}
@@ -343,10 +342,10 @@ export default function Scripts() {
                   <Tooltip
                     title={
                       script.is_template
-                        ? 'Cannot delete templates'
+                        ? '无法删除模板'
                         : script.usage_count > 0
-                          ? `Script is used in ${script.usage_count} ${script.usage_count === 1 ? 'place' : 'places'}`
-                          : 'Delete Script'
+                          ? `脚本已在 ${script.usage_count} 个位置使用`
+                          : '删除脚本'
                     }
                   >
                     <span>
@@ -369,64 +368,62 @@ export default function Scripts() {
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle>{editingScript ? 'Edit Script' : 'Create Script'}</DialogTitle>
+        <DialogTitle>{editingScript ? '编辑脚本' : '创建脚本'}</DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
             <TextField
-              label="Name"
+              label="名称"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               fullWidth
               required
-              helperText="A unique name for this script"
+              helperText="此脚本的唯一名称"
             />
 
             <TextField
-              label="Description"
+              label="描述"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               fullWidth
               multiline
               rows={2}
-              helperText="Optional description of what this script does"
+              helperText="此脚本的可选描述"
             />
 
             <FormControl fullWidth>
-              <InputLabel>Run On</InputLabel>
+              <InputLabel>运行条件</InputLabel>
               <Select
                 value={formData.run_on}
-                label="Run On"
+                label="运行条件"
                 onChange={(e) => setFormData({ ...formData, run_on: e.target.value })}
               >
-                <MenuItem value="success">Success - Only after successful backups</MenuItem>
-                <MenuItem value="failure">Failure - Only after failed backups</MenuItem>
-                <MenuItem value="warning">Warning - Only after backups with warnings</MenuItem>
-                <MenuItem value="always">Always - Run regardless of result</MenuItem>
+                <MenuItem value="success">成功 - 仅在备份成功后运行</MenuItem>
+                <MenuItem value="failure">失败 - 仅在备份失败后运行</MenuItem>
+                <MenuItem value="warning">警告 - 仅在备份有警告时运行</MenuItem>
+                <MenuItem value="always">始终 - 无论结果如何都运行</MenuItem>
               </Select>
             </FormControl>
-
             <Alert severity="info">
-              <strong>Note:</strong> The "Run On" condition only applies to Post-Backup hooks.
-              Pre-backup scripts always run before the backup starts.
+              <strong>注意：</strong>“运行条件”仅适用于备份后的钩子。备份前的脚本始终在备份开始前运行。
             </Alert>
 
             <TextField
-              label="Timeout (seconds)"
+              label="超时时间 (秒)"
               type="number"
               value={formData.timeout}
               onChange={(e) => setFormData({ ...formData, timeout: parseInt(e.target.value) })}
               fullWidth
               inputProps={{ min: 30, max: 3600 }}
-              helperText="Maximum execution time (30-3600 seconds)"
+              helperText="最大执行时间 (30-3600 秒)"
             />
 
             <CodeEditor
-              label="Script Content"
+              label="脚本内容"
               value={formData.content}
               onChange={(value) => setFormData({ ...formData, content: value })}
               height="300px"
               language="shell"
-              helperText="Bash script that will be executed as a hook"
+              helperText="Bash 脚本将作为钩子执行"
             />
 
             {editingScript && editingScript.usage_count > 0 && (
@@ -456,7 +453,7 @@ export default function Scripts() {
         <DialogTitle>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Play size={20} />
-            Script Test Result
+            脚本测试结果
           </Box>
         </DialogTitle>
         <DialogContent>
@@ -473,11 +470,10 @@ export default function Scripts() {
                 icon={testResult.success ? <CheckCircle /> : <XCircle />}
               >
                 <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                  {testResult.success ? 'Script executed successfully' : 'Script execution failed'}
+                  {testResult.success ? '脚本执行成功' : '脚本执行失败'}
                 </Typography>
                 <Typography variant="caption">
-                  Exit code: {testResult.exit_code} | Execution time:{' '}
-                  {testResult.execution_time.toFixed(2)}s
+                  退出代码: {testResult.exit_code} | 执行时间: {testResult.execution_time.toFixed(2)}秒
                 </Typography>
               </Alert>
 
@@ -485,7 +481,7 @@ export default function Scripts() {
               {testResult.stdout && (
                 <Box>
                   <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
-                    Standard Output:
+                    标准输出：
                   </Typography>
                   <Paper
                     sx={{
@@ -510,7 +506,7 @@ export default function Scripts() {
                     variant="subtitle2"
                     sx={{ mb: 1, fontWeight: 600, color: 'error.main' }}
                   >
-                    Standard Error:
+                    标准错误：
                   </Typography>
                   <Paper
                     sx={{
