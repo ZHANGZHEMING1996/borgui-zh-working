@@ -751,6 +751,8 @@ const Restore: React.FC = () => {
                 disabled={restoreMutation.isPending}
                 required
                 selectMode="directories"
+                value={destination} // Added value prop
+                onChange={(newValue) => setDestination(newValue)} // Added onChange prop
               />
             </Stack>
           )}
