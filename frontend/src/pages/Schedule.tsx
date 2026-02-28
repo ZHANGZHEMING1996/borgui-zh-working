@@ -845,10 +845,10 @@ const Schedule: React.FC = () => {
       <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Box>
           <Typography variant="h4" fontWeight={600} gutterBottom>
-            Schedule
+            计划任务
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Manage automated backups and repository checks
+            管理自动备份和存储库检查
           </Typography>
         </Box>
 
@@ -860,7 +860,7 @@ const Schedule: React.FC = () => {
             onClick={openCreateModal}
             disabled={!repositories || repositories.length === 0}
           >
-            Create Backup Schedule
+            创建备份计划
           </Button>
         ) : (
           <Button
@@ -869,7 +869,7 @@ const Schedule: React.FC = () => {
             onClick={() => scheduledChecksSectionRef.current?.openAddDialog()}
             disabled={!repositories || repositories.length === 0}
           >
-            Add Check Schedule
+            添加检查计划
           </Button>
         )}
       </Box>
@@ -877,8 +877,8 @@ const Schedule: React.FC = () => {
       {/* Tabs */}
       <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
         <Tabs value={currentTab} onChange={(_, newValue) => setCurrentTab(newValue)}>
-          <Tab label="Backup Jobs" />
-          <Tab label="Repository Checks" />
+          <Tab label="备份任务" />
+          <Tab label="存储库检查" />
         </Tabs>
       </Box>
 
@@ -888,7 +888,7 @@ const Schedule: React.FC = () => {
           {/* No repositories warning */}
           {(!repositories || repositories.length === 0) && (
             <Alert severity="info" sx={{ mb: 3 }}>
-              You need to create at least one repository before scheduling backups.
+              您需要创建至少一个存储库才能安排备份。
             </Alert>
           )}
 
@@ -1180,14 +1180,14 @@ const Schedule: React.FC = () => {
           <Card sx={{ mt: 3 }}>
             <CardContent>
               <Typography variant="h6" fontWeight={600} gutterBottom>
-                Backup History
+                备份历史记录
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Showing {recentBackupJobs.length} of {filteredBackupJobs.length} backup jobs
+                显示最近 {recentBackupJobs.length} 条备份任务，共 {filteredBackupJobs.length} 条
                 {(filterSchedule !== 'all' ||
                   filterRepository !== 'all' ||
                   filterStatus !== 'all') &&
-                  ' (filtered)'}
+                  '（已过滤）'}
               </Typography>
 
               {/* Filters */}
@@ -1232,9 +1232,9 @@ const Schedule: React.FC = () => {
                     onChange={(e) => setFilterStatus(e.target.value)}
                   >
                     <MenuItem value="all">All Status</MenuItem>
-                    <MenuItem value="completed">Completed</MenuItem>
-                    <MenuItem value="failed">Failed</MenuItem>
-                    <MenuItem value="warning">Warning</MenuItem>
+                    <MenuItem value="completed">已完成</MenuItem>
+                    <MenuItem value="failed">失败</MenuItem>
+                    <MenuItem value="warning">警告</MenuItem>
                   </Select>
                 </FormControl>
               </Stack>
