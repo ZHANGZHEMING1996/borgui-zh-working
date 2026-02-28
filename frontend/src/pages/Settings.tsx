@@ -94,6 +94,15 @@ const Settings: React.FC = () => {
   useEffect(() => {
     setActiveTab(getTabIndexFromPath(tab))
   }, [tab, getTabIndexFromPath])
+
+  // 修复二级菜单跳转问题
+  useEffect(() => {
+    const tabIndex = getTabIndexFromPath(tab)
+    if (tabIndex !== activeTab) {
+      setActiveTab(tabIndex)
+    }
+  }, [tab, getTabIndexFromPath, activeTab])
+
   const [showCreateUser, setShowCreateUser] = useState(false)
   const [editingUser, setEditingUser] = useState<UserType | null>(null)
   const [showPasswordModal, setShowPasswordModal] = useState(false)
