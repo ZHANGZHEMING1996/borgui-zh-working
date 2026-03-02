@@ -362,7 +362,7 @@ export default function DashboardNew() {
               <Stack direction="row" spacing={1.5} alignItems="center">
                 <HardDrive size={20} />
                 <Typography variant="h6" fontWeight={600}>
-                  Storage Breakdown
+                  存储状态
                 </Typography>
               </Stack>
               <Typography variant="h5" fontWeight={700} color="primary">
@@ -444,7 +444,7 @@ export default function DashboardNew() {
             <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 2 }}>
               <Server size={20} />
               <Typography variant="h6" fontWeight={600}>
-                System Resources
+                系统资源
               </Typography>
             </Stack>
 

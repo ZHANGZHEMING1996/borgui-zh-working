@@ -119,11 +119,11 @@ const Activity: React.FC = () => {
               label="Status"
               onChange={(e) => handleStatusFilterChange(e.target.value)}
             >
-              <MenuItem value="all">All Status</MenuItem>
-              <MenuItem value="completed">Completed</MenuItem>
-              <MenuItem value="failed">Failed</MenuItem>
-              <MenuItem value="running">Running</MenuItem>
-              <MenuItem value="pending">Pending</MenuItem>
+              <MenuItem value="all">所有状态</MenuItem>
+              <MenuItem value="completed">已完成</MenuItem>
+              <MenuItem value="failed">失败</MenuItem>
+              <MenuItem value="running">运行中</MenuItem>
+              <MenuItem value="pending">待处理</MenuItem>
             </Select>
           </FormControl>
         </Box>
