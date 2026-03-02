@@ -56,28 +56,28 @@ const Settings: React.FC = () => {
   const queryClient = useQueryClient()
   const { tab } = useParams<{ tab?: string }>()
 
-  // 根据用户角色获取标签顺序
+  // Get tab order based on user role
   const getTabOrder = React.useCallback(() => {
-    const baseTabs = ['账户', '外观', '偏好设置', '通知']
+    const baseTabs = ['account', 'appearance', 'preferences', 'notifications']
     if (user?.is_admin) {
       return [
         ...baseTabs,
-        '系统',
-        '测试功能',
-        '缓存',
-        '日志',
-        '挂载点',
-        '软件包',
-        '脚本',
-        '导入导出',
-        '用户管理',
-        '活动',
+        'system',
+        'beta',
+        'cache',
+        'logs',
+        'mounts',
+        'packages',
+        'scripts',
+        'export',
+        'users',
+        'activity',
       ]
     }
-    return [...baseTabs, '挂载点', '脚本', '导入导出', '活动']
+    return [...baseTabs, 'mounts', 'scripts', 'export', 'activity']
   }, [user?.is_admin])
 
-  // 从URL确定活动标签或默认为“账户”
+  // Determine active tab from URL or default to 'account'
   const getTabIndexFromPath = React.useCallback(
     (tabPath?: string): number => {
       if (!tabPath) return 0
@@ -90,7 +90,7 @@ const Settings: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState(getTabIndexFromPath(tab))
 
-  // 当URL更改时更新活动标签
+  // Update active tab when URL changes
   useEffect(() => {
     setActiveTab(getTabIndexFromPath(tab))
   }, [tab, getTabIndexFromPath])
@@ -105,7 +105,7 @@ const Settings: React.FC = () => {
     confirm_password: '',
   })
 
-  // 修改密码的变更（针对当前用户）
+  // Change password mutation (for current user)
   const changePasswordMutation = useMutation({
     mutationFn: (passwordData: { current_password: string; new_password: string }) =>
       settingsAPI.changePassword(passwordData),
